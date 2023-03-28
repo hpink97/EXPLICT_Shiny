@@ -5,14 +5,23 @@ library(DT)
 library(ggplot2)
 
 # load data
-path <- "G:/Shared drives/Denby Lab Team Drive/Lab members/Harry/R functions/Data/Geng2021_TF_target_prediction.Rds"
-data <- readRDS(path)
+path <- "https://github.com/hpink97/EXPLICT_Shiny/blob/5227a47976342eb98ce62e439d2380e53d69922a/Geng2021_TF_target_prediction.Rds?raw=true"
+data <- read_rds(path)
+minus_log10_p <- -log10(data$p.value)
+abs_coef <- abs(data$Coefficient)
+
+data$confidence_percentile <-  round(ecdf(minus_log10_p)(minus_log10_p), digits = 3)
+data$coeff_percentile <- round(ecdf(abs_coef)(abs_coef),digits = 3)
 
 # Define UI
 ui <- fluidPage(
   
   # App title
-  titlePanel("EXPLICIT (Expression Prediction via Log-linear Combination of Transcription Factors) Arabidopsis Model"),
+  titlePanel(
+    "EXPLICIT (Expression Prediction via Log-linear Combination of Transcription Factors) Arabidopsis Model"
+  ),
+  
+  h4('This is a shiny app to explore the Arabidopsis predicted transcriptional regulation from the EXPLICT model. For further details please see Geng et al (2021) Plant J  https://doi.org/10.1111/tpj.15315'),
   
   # Sidebar layout
   sidebarLayout(
@@ -30,7 +39,9 @@ ui <- fluidPage(
                 label = "Enter an Arabidopsis gene id (e.g. AT4G00480)"),
       
       # Thank you/error message
-      verbatimTextOutput(outputId = "thankyou_text")
+      verbatimTextOutput(outputId = "thankyou_text"),
+      
+      verbatimTextOutput(outputId = "static_text")
       
     ),
     
@@ -74,6 +85,9 @@ server <- function(input, output) {
       paste("Error: chosen",input$input_val, "is not valid, please try of;",paste(unique(data[[input$input_col]])[1:5],collapse = ', ' ))
     }
   })
+  
+  
+
   
   # Filtered data table
   output$filtered_data <- DT::renderDataTable({
